@@ -1,0 +1,62 @@
+products = [
+    "хлеб",
+    "молоко",
+    "сыр",
+    "яблоко",
+    "молоко",
+    "чай",
+    "печенье",
+    "сыр",
+    "сок",
+    "молоко"
+]
+
+print("Исходный список:")
+print(products)
+print()
+
+print("Предпоследний элемент:", products[-2])
+print("Элемент с индексом 0:", products[0])
+print("Элемент с индексом 3:", products[3])
+print("Элемент с индексом 5:", products[5])
+print()
+
+# Меняю один элемент в списке
+products[3] = "банан"
+print("После замены элемента:")
+print(products)
+print()
+
+# Срез по диапазону
+print("Элементы с 2 по 6 индекс:")
+print(products[2:7])
+print()
+
+products.append("кефир")
+print("После добавления в конец:")
+print(products)
+print()
+
+middle_index = len(products) // 2
+products.insert(middle_index, "вода")
+print("После вставки в середину:")
+print(products)
+print()
+
+milk_count = products.count("молоко")
+print('Сколько раз встречается "молоко":', milk_count)
+print()
+
+# Делаю копию и меняю её отдельно
+products_copy = products.copy()
+products_copy[0] = "кофе"
+
+print("Исходный список:")
+print(products)
+print()
+
+print("Копия списка:")
+print(products_copy)
+print()
+
+print("Списки одинаковые?", products == products_copy)
