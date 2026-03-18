@@ -1,0 +1,111 @@
+using System;
+using System.Diagnostics;
+using System.Linq;
+
+namespace LR4_Processes_CSharp
+{
+    class Program
+    {
+        static void Main()
+        {
+            ShowAllProcesses();
+            Console.WriteLine();
+
+            ShowVisualStudioThreads();
+            Console.WriteLine();
+
+            StartExternalProcesses();
+            Console.WriteLine();
+
+            Console.WriteLine("Работа программы завершена.");
+            Console.ReadKey();
+        }
+
+        static void ShowAllProcesses()
+        {
+            Console.WriteLine("Все запущенные процессы:");
+            Console.WriteLine(new string('-', 70));
+
+            // Сортирую по имени, так вывод читать удобнее
+            Process[] processes = Process.GetProcesses()
+                                         .OrderBy(p => p.ProcessName)
+                                         .ToArray();
+
+            foreach (Process process in processes)
+            {
+                try
+                {
+                    Console.WriteLine(
+                        $"ID: {process.Id,-8} Имя: {process.ProcessName,-30} " +
+                        $"Память: {process.WorkingSet64 / 1024 / 1024} МБ"
+                    );
+                }
+                catch
+                {
+                    Console.WriteLine($"ID: {process.Id,-8} Имя: {process.ProcessName,-30} Доступ ограничен");
+                }
+            }
+        }
+
+        static void ShowVisualStudioThreads()
+        {
+            Console.WriteLine("Потоки процесса Visual Studio:");
+            Console.WriteLine(new string('-', 70));
+
+            Process[] visualStudioProcesses = Process.GetProcessesByName("devenv");
+
+            if (visualStudioProcesses.Length == 0)
+            {
+                Console.WriteLine("Visual Studio не найдена. Сначала запустите её.");
+                return;
+            }
+
+            foreach (Process process in visualStudioProcesses)
+            {
+                Console.WriteLine($"Процесс: {process.ProcessName}, ID: {process.Id}");
+
+                foreach (ProcessThread thread in process.Threads)
+                {
+                    Console.WriteLine(
+                        $"   Thread ID: {thread.Id,-8} " +
+                        $"Приоритет: {thread.CurrentPriority,-5} " +
+                        $"Состояние: {thread.ThreadState}"
+                    );
+                }
+
+                Console.WriteLine(new string('-', 70));
+            }
+        }
+
+        static void StartExternalProcesses()
+        {
+            Console.WriteLine("Запуск сторонних процессов:");
+            Console.WriteLine(new string('-', 70));
+
+            StartOneProcess("notepad.exe");
+            StartOneProcess("calc.exe");
+            StartOneProcess("mspaint.exe");
+        }
+
+        static void StartOneProcess(string fileName)
+        {
+            try
+            {
+                Process process = Process.Start(fileName);
+
+                if (process != null)
+                {
+                    Console.WriteLine($"Приложение {fileName} запущено. ID: {process.Id}");
+                }
+                else
+                {
+                    Console.WriteLine($"Не удалось запустить {fileName}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при запуске {fileName}: {ex.Message}");
+            }
+        }
+    }
+}
