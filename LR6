@@ -1,0 +1,65 @@
+using System;
+using System.Threading;
+using Excel = Microsoft.Office.Interop.Excel;
+
+class Program
+{
+    static string filePath = Environment.CurrentDirectory + @"\lab3.xlsx";
+
+    static void Main()
+    {
+        Thread t1 = new Thread(() => ReadSheet("Студенты", 0));
+        Thread t2 = new Thread(() => ReadSheet("Товары", 1500));
+
+        t1.Name = "Поток 1";
+        t2.Name = "Поток 2";
+
+        Console.WriteLine("Статус до запуска:");
+        Console.WriteLine($"{t1.Name}: {t1.ThreadState}");
+        Console.WriteLine($"{t2.Name}: {t2.ThreadState}");
+
+        t1.Start();
+        t2.Start();
+
+        Console.WriteLine("\nСтатус после запуска:");
+        Console.WriteLine($"{t1.Name}: {t1.ThreadState}");
+        Console.WriteLine($"{t2.Name}: {t2.ThreadState}");
+
+        t1.Join();
+        t2.Join();
+
+        Console.WriteLine("\nСтатус после завершения:");
+        Console.WriteLine($"{t1.Name}: {t1.ThreadState}");
+        Console.WriteLine($"{t2.Name}: {t2.ThreadState}");
+
+        Console.WriteLine("\nРабота завершена.");
+        Console.ReadKey();
+    }
+
+    static void ReadSheet(string sheetName, int delay)
+    {
+        if (delay > 0)
+            Thread.Sleep(delay);
+
+        Excel.Application app = new Excel.Application();
+        Excel.Workbook book = app.Workbooks.Open(filePath);
+        Excel.Worksheet sheet = (Excel.Worksheet)book.Sheets[sheetName];
+        Excel.Range range = sheet.UsedRange;
+
+        Console.WriteLine($"\nЛист: {sheetName}");
+
+        for (int i = 1; i <= range.Rows.Count; i++)
+        {
+            for (int j = 1; j <= range.Columns.Count; j++)
+            {
+                string value = Convert.ToString(((Excel.Range)range.Cells[i, j]).Text);
+                Console.Write(value + "\t");
+            }
+
+            Console.WriteLine();
+        }
+
+        book.Close(false);
+        app.Quit();
+    }
+}
