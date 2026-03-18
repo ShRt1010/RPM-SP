@@ -1,0 +1,117 @@
+using System;
+using System.IO;
+using System.Net;
+using System.Runtime.InteropServices;
+using Excel = Microsoft.Office.Interop.Excel;
+
+namespace LR5_Download_Excel_CSharp
+{
+    class Program
+    {
+        static void Main()
+        {
+            string fileUrl = "https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/excel/sample-1-sheet.xlsx";
+            string localFilePath = Path.Combine(Environment.CurrentDirectory, "downloaded_sample.xlsx");
+
+            DownloadExcelFile(fileUrl, localFilePath);
+            Console.WriteLine();
+
+            if (File.Exists(localFilePath))
+            {
+                PrintExcelContent(localFilePath);
+            }
+            else
+            {
+                Console.WriteLine("Файл не найден после загрузки.");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Нажмите любую клавишу для завершения...");
+            Console.ReadKey();
+        }
+
+        static void DownloadExcelFile(string fileUrl, string localFilePath)
+        {
+            try
+            {
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(fileUrl, localFilePath);
+                }
+
+                Console.WriteLine("Файл успешно загружен.");
+                Console.WriteLine("Сохранён по пути: " + localFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка при загрузке файла: " + ex.Message);
+            }
+        }
+
+        static void PrintExcelContent(string filePath)
+        {
+            Excel.Application excelApp = null;
+            Excel.Workbook workbook = null;
+
+            try
+            {
+                excelApp = new Excel.Application();
+                workbook = excelApp.Workbooks.Open(filePath);
+
+                foreach (Excel.Worksheet sheet in workbook.Worksheets)
+                {
+                    Excel.Range usedRange = sheet.UsedRange;
+                    int rowCount = usedRange.Rows.Count;
+                    int colCount = usedRange.Columns.Count;
+
+                    Console.WriteLine($"Содержимое листа: {sheet.Name}");
+                    Console.WriteLine(new string('-', 70));
+
+                    for (int row = 1; row <= rowCount; row++)
+                    {
+                        for (int col = 1; col <= colCount; col++)
+                        {
+                            Excel.Range cell = (Excel.Range)usedRange.Cells[row, col];
+                            string value = Convert.ToString(cell.Text);
+                            Console.Write(value + "\t");
+                            ReleaseComObject(cell);
+                        }
+
+                        Console.WriteLine();
+                    }
+
+                    Console.WriteLine();
+                    ReleaseComObject(usedRange);
+                    ReleaseComObject(sheet);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка при чтении Excel-файла: " + ex.Message);
+            }
+            finally
+            {
+                if (workbook != null)
+                {
+                    workbook.Close(false);
+                }
+
+                if (excelApp != null)
+                {
+                    excelApp.Quit();
+                }
+
+                ReleaseComObject(workbook);
+                ReleaseComObject(excelApp);
+            }
+        }
+
+        static void ReleaseComObject(object comObject)
+        {
+            if (comObject != null)
+            {
+                Marshal.ReleaseComObject(comObject);
+            }
+        }
+    }
+}
