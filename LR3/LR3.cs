@@ -5,34 +5,52 @@ class Program
 {
     static void Main()
     {
-        string path = Environment.CurrentDirectory + @"\lab3.xlsx";
+        // Создаю объект Excel
+        Excel.Application excelApp = new Excel.Application();
 
-        var app = new Excel.Application();
-        var book = app.Workbooks.Open(path);
-
-        for (int s = 1; s <= book.Sheets.Count; s++)
+        // Проверяю, запустился ли Excel
+        if (excelApp == null)
         {
-            Excel.Worksheet sheet = (Excel.Worksheet)book.Sheets[s];
+            Console.WriteLine("Excel не установлен");
+            return;
+        }
+
+        // Открываю файл data.xlsx из папки проекта
+        Excel.Workbook workbook = excelApp.Workbooks.Open(
+            Environment.CurrentDirectory + "\\data.xlsx"
+        );
+
+        // Перебираю все листы в Excel-файле
+        foreach (Excel.Worksheet sheet in workbook.Worksheets)
+        {
+            Console.WriteLine("Лист: " + sheet.Name);
+
+            // Получаю область, где есть данные
             Excel.Range range = sheet.UsedRange;
 
-            Console.WriteLine($"\nЛист: {sheet.Name}");
+            int rows = range.Rows.Count;
+            int cols = range.Columns.Count;
 
-            for (int i = 1; i <= range.Rows.Count; i++)
+            // Вывожу все ячейки листа
+            for (int i = 1; i <= rows; i++)
             {
-                for (int j = 1; j <= range.Columns.Count; j++)
+                for (int j = 1; j <= cols; j++)
                 {
-                    var cell = (Excel.Range)range.Cells[i, j];
-                    Console.Write(cell.Value2 + "\t");
+                    Console.Write(range.Cells[i, j].Value2 + "\t");
                 }
 
                 Console.WriteLine();
             }
+
+            Console.WriteLine();
         }
 
-        book.Close(false);
-        app.Quit();
+        // Закрываю файл
+        workbook.Close(false);
 
-        Console.WriteLine("\nГотово.");
-        Console.ReadKey();
+        // Закрываю Excel
+        excelApp.Quit();
+
+        Console.WriteLine("Данные из Excel выведены");
     }
 }
