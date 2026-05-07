@@ -1,98 +1,54 @@
 using ClosedXML.Excel;
 using System.Threading;
 
-// Имя Excel-файла
-string fileName = "data.xlsx";
+// Файл Excel должен лежать рядом с программой
+string file = "data.xlsx";
 
-// Если файла нет, создаём его для проверки
-if (!File.Exists(fileName))
+// Создаю два потока для чтения разных листов
+Thread t1 = new Thread(() => ReadSheet(file, "Студенты", 2000));
+Thread t2 = new Thread(() => ReadSheet(file, "Товары", 0));
+
+// Даю потокам имена
+t1.Name = "Поток 1";
+t2.Name = "Поток 2";
+
+// Статус до запуска
+Console.WriteLine($"До запуска: {t1.Name} - {t1.ThreadState}");
+Console.WriteLine($"До запуска: {t2.Name} - {t2.ThreadState}\n");
+
+// Запускаю потоки
+t1.Start();
+t2.Start();
+
+// Вывожу статус после запуска
+Console.WriteLine($"После запуска: {t1.Name} - {t1.ThreadState}");
+Console.WriteLine($"После запуска: {t2.Name} - {t2.ThreadState}\n");
+
+// Жду завершения потоков
+t1.Join();
+t2.Join();
+
+// Статус после завершения
+Console.WriteLine($"\nПосле завершения: {t1.Name} - {t1.ThreadState}");
+Console.WriteLine($"После завершения: {t2.Name} - {t2.ThreadState}");
+
+
+// Метод для чтения листа Excel
+static void ReadSheet(string file, string sheetName, int delay)
 {
-    CreateExcelFile(fileName);
-}
+    // Задержка для одного потока
+    Thread.Sleep(delay);
 
-// Создаём первый поток для чтения листа "Студенты"
-Thread thread1 = new Thread(() => ReadSheet(fileName, "Студенты", 2000));
+    Console.WriteLine($"Читается лист: {sheetName}");
 
-// Создаём второй поток для чтения листа "Товары"
-Thread thread2 = new Thread(() => ReadSheet(fileName, "Товары", 0));
+    // Открываю Excel-файл
+    using var book = new XLWorkbook(file);
 
-// Даём потокам имена, чтобы было понятно в выводе
-thread1.Name = "Поток 1";
-thread2.Name = "Поток 2";
+    // Выбираю нужный лист
+    var sheet = book.Worksheet(sheetName);
 
-// Выводим статус до запуска
-Console.WriteLine($"Статус {thread1.Name}: {thread1.ThreadState}");
-Console.WriteLine($"Статус {thread2.Name}: {thread2.ThreadState}");
-Console.WriteLine();
-
-// Запускаем оба потока
-thread1.Start();
-thread2.Start();
-
-// Выводим статус после запуска
-Console.WriteLine($"Статус {thread1.Name}: {thread1.ThreadState}");
-Console.WriteLine($"Статус {thread2.Name}: {thread2.ThreadState}");
-Console.WriteLine();
-
-// Ждём завершения потоков
-thread1.Join();
-thread2.Join();
-
-// Выводим статус после завершения
-Console.WriteLine();
-Console.WriteLine($"Статус {thread1.Name}: {thread1.ThreadState}");
-Console.WriteLine($"Статус {thread2.Name}: {thread2.ThreadState}");
-
-
-// Метод создаёт Excel-файл с двумя листами
-static void CreateExcelFile(string fileName)
-{
-    using var workbook = new XLWorkbook();
-
-    // Первый лист
-    var sheet1 = workbook.Worksheets.Add("Студенты");
-    sheet1.Cell(1, 1).Value = "Имя";
-    sheet1.Cell(1, 2).Value = "Возраст";
-    sheet1.Cell(2, 1).Value = "Иван";
-    sheet1.Cell(2, 2).Value = 18;
-    sheet1.Cell(3, 1).Value = "Анна";
-    sheet1.Cell(3, 2).Value = 19;
-
-    // Второй лист
-    var sheet2 = workbook.Worksheets.Add("Товары");
-    sheet2.Cell(1, 1).Value = "Товар";
-    sheet2.Cell(1, 2).Value = "Цена";
-    sheet2.Cell(2, 1).Value = "Хлеб";
-    sheet2.Cell(2, 2).Value = 45;
-    sheet2.Cell(3, 1).Value = "Молоко";
-    sheet2.Cell(3, 2).Value = 80;
-
-    // Сохраняем файл
-    workbook.SaveAs(fileName);
-}
-
-
-// Метод читает один лист Excel
-static void ReadSheet(string fileName, string sheetName, int delay)
-{
-    // Задержка нужна по заданию для одного потока
-    if (delay > 0)
-    {
-        Thread.Sleep(delay);
-    }
-
-    Console.WriteLine($"Читает {Thread.CurrentThread.Name}: лист {sheetName}");
-
-    using var workbook = new XLWorkbook(fileName);
-
-    // Открываем нужный лист
-    var sheet = workbook.Worksheet(sheetName);
-
-    // Берём область, где есть данные
-    var range = sheet.RangeUsed();
-
-    // Выводим все ячейки листа
-    foreach (var row in range.Rows())
+    // Вывожу данные из заполненных ячеек
+    foreach (var row in sheet.RangeUsed().Rows())
     {
         foreach (var cell in row.Cells())
         {
