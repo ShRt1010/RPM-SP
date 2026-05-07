@@ -1,0 +1,27 @@
+using System;
+using System.IO;
+using System.IO.Pipes;
+using System.Text;
+
+// Создаю серверный именованный канал
+using var pipe = new NamedPipeServerStream("lab8_pipe", PipeDirection.InOut);
+
+Console.WriteLine("Сервер ждёт клиента...");
+
+// Сервер ждёт, пока подключится клиент
+pipe.WaitForConnection();
+
+Console.WriteLine("Клиент подключился");
+
+// Потоки для чтения и записи сообщений
+using var reader = new StreamReader(pipe, Encoding.UTF8);
+using var writer = new StreamWriter(pipe, Encoding.UTF8) { AutoFlush = true };
+
+// Отправляю сообщение клиенту
+writer.WriteLine("Привет от сервера");
+
+// Получаю ответ от клиента
+string? answer = reader.ReadLine();
+
+Console.WriteLine("Ответ клиента: " + answer);
+Console.WriteLine("Сервер закончил работу");
